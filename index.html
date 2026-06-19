@@ -3,44 +3,212 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dynamic Memory Card Game</title>
+<title>Premium Memory Card Game</title>
 <style>
+  :root {
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --card-back: #3b82f6;
+    --card-match: #10b981;
+    --text-color: #f8fafc;
+    --accent-color: #6366f1;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
-    font-family: sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 0;
-    background: #f0f0f0;
-    color: #333;
+    min-height: 100vh;
+    padding: 20px;
   }
-  h1 { margin-top: 20px; }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    background: linear-gradient(to right, #6366f1, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
   .controls {
-    margin: 10px 0; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+    background: #1e293b;
+    padding: 15px 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    border: 1px solid #334155;
   }
-  .controls label { display: flex; flex-direction: column; font-size: 0.9rem; }
-  .game-info { margin: 10px 0; }
+
+  .controls label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+    gap: 5px;
+  }
+
+  .controls input, .controls select, .controls button {
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .controls input:focus, .controls select:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  }
+
+  .controls button {
+    background: var(--accent-color);
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    padding: 8px 20px;
+  }
+
+  .controls button:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
+  }
+
+  .game-info {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #94a3b8;
+    margin-bottom: 25px;
+    display: flex;
+    gap: 15px;
+  }
+
+  .game-info span {
+    color: #fff;
+    font-weight: bold;
+  }
+
+  /* Grid Setup */
   .grid {
     display: grid;
-    grid-gap: 10px;
-    margin: 20px 0;
+    grid-gap: 12px;
+    perspective: 1000px; /* Essential for 3D flip effect */
+    margin-bottom: 40px;
   }
+
+  /* 3D Card Architecture */
   .card {
-    background: #fff;
-    border-radius: 8px;
+    width: 80px;
+    height: 80px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+  }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
-    cursor: pointer;
-    user-select: none;
-    transition: transform 0.3s;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
   }
-  .card.flipped {
-    background: #4caf50;
+
+  .card-front {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border: 2px solid #334155;
+  }
+
+  .card-front::before {
+    content: '?';
+    color: #475569;
+    font-size: 1.8rem;
+  }
+
+  .card-back {
+    background: var(--card-back);
     color: #fff;
     transform: rotateY(180deg);
+  }
+
+  /* State Classes toggled by JS */
+  .card.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card.matched .card-back {
+    background: var(--card-match);
+    animation: pulse 0.5s ease-in-out;
+  }
+
+  @keyframes pulse {
+    0% { transform: rotateY(180deg) scale(1); }
+    50% { transform: rotateY(180deg) scale(1.08); }
+    100% { transform: rotateY(180deg) scale(1); }
+  }
+
+  /* Victory Modal Box */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+
+  .modal-content {
+    background: #1e293b;
+    border: 1px solid #334155;
+    padding: 30px 40px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
+  }
+
+  .modal-content h2 {
+    color: var(--card-match);
+    margin-bottom: 15px;
+    font-size: 2rem;
+  }
+
+  .modal-content p {
+    color: #94a3b8;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+  }
+
+  .modal-content button {
+    background: var(--accent-color);
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
   }
 </style>
 </head>
@@ -62,10 +230,20 @@
 </div>
 
 <div class="game-info">
-  Score: <span id="score">0</span> | Time: <span id="timer">0</span>s
+  <div>Score: <span id="score">0</span></div>
+  <div>|</div>
+  <div>Time: <span id="timer">0</span>s</div>
 </div>
 
 <div class="grid" id="grid"></div>
+
+<div class="modal" id="winModal">
+  <div class="modal-content">
+    <h2>Victory! 🎉</h2>
+    <p id="winMessage"></p>
+    <button id="modalCloseBtn">Play Again</button>
+  </div>
+</div>
 
 <script>
 const grid = document.getElementById('grid');
@@ -75,20 +253,29 @@ const startBtn = document.getElementById('startBtn');
 const minInput = document.getElementById('minNum');
 const maxInput = document.getElementById('maxNum');
 const gridSelect = document.getElementById('gridSize');
+const winModal = document.getElementById('winModal');
+const winMessage = document.getElementById('winMessage');
+const modalCloseBtn = document.getElementById('modalCloseBtn');
 
 let cardsArray = [];
 let flippedCards = [];
 let score = 0;
 let time = 0;
-let timer;
+let timer = null;
+let isProcessing = false;
 
-// Shuffle array
+// Fisher-Yates (Knuth) Shuffle - Truly random and unbiased
 function shuffle(array) {
-  return array.sort(() => Math.random() - 0.5);
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
 
-// Timer
+// Timer Controller
 function startTimer() {
+  clearInterval(timer);
   time = 0;
   timerEl.textContent = time;
   timer = setInterval(() => {
@@ -97,89 +284,127 @@ function startTimer() {
   }, 1000);
 }
 
-// Create number pairs dynamically based on grid size
+// Fixed array generation: Handles minimal ranges without throwing loops
 function createNumberArray(min, max, gridSize) {
   const totalCards = gridSize * gridSize;
   const totalPairs = totalCards / 2;
   const numbers = [];
-  const range = Math.min(max - min + 1, totalPairs);
-
-  for(let i = 0; i < range; i++){
-    numbers.push(min + i, min + i); // duplicate for pairs
+  
+  // Calculate distinct pool size available
+  const pool = [];
+  for (let i = min; i <= max; i++) {
+    pool.push(i);
   }
 
-  // Fill remaining pairs if needed
-  while(numbers.length < totalCards){
-    const randomNum = Math.floor(Math.random() * (max - min + 1)) + parseInt(min);
-    if(numbers.filter(n => n === randomNum).length < 2) numbers.push(randomNum, randomNum);
+  // If input range is empty or inverted, fallback safely
+  if (pool.length === 0) pool.push(0);
+
+  // Fill array pairs up to target requirements
+  for (let i = 0; i < totalPairs; i++) {
+    // If pool exhausted, loop back around sequentially to avoid freezing
+    const num = pool[i % pool.length];
+    numbers.push(num, num);
   }
 
   return numbers;
 }
 
-// Create the grid dynamically
-function createGrid(min, max, gridSize) {
+// Dynamic grid builder with 3D nodes
+function createGrid() {
+  const min = parseInt(minInput.value) || 0;
+  const max = parseInt(maxInput.value) || 0;
+  const gridSize = parseInt(gridSelect.value);
+
   grid.innerHTML = '';
   grid.style.gridTemplateColumns = `repeat(${gridSize}, 80px)`;
-  cardsArray = createNumberArray(min, max, gridSize);
-  const shuffled = shuffle(cardsArray);
+  
+  flippedCards = [];
+  isProcessing = false;
 
-  shuffled.forEach(number => {
+  cardsArray = createNumberArray(min, max, gridSize);
+  shuffle(cardsArray);
+
+  cardsArray.forEach(number => {
+    // Outer card container
     const card = document.createElement('div');
     card.classList.add('card');
     card.dataset.number = number;
-    card.style.width = '80px';
-    card.style.height = '80px';
+
+    // Front (Hidden face)
+    const frontFace = document.createElement('div');
+    frontFace.classList.add('card-face', 'card-front');
+
+    // Back (Revealed value face)
+    const backFace = document.createElement('div');
+    backFace.classList.add('card-face', 'card-back');
+    backFace.textContent = number;
+
+    card.appendChild(frontFace);
+    card.appendChild(backFace);
     card.addEventListener('click', flipCard);
     grid.appendChild(card);
   });
 }
 
-// Flip card
+// Card rotation routine
 function flipCard() {
-  if(this.classList.contains('flipped') || flippedCards.length === 2) return;
+  if (isProcessing || this.classList.contains('flipped') || this.classList.contains('matched')) return;
+
   this.classList.add('flipped');
-  this.textContent = this.dataset.number;
   flippedCards.push(this);
 
-  if(flippedCards.length === 2) checkMatch();
-}
-
-// Check for match
-function checkMatch() {
-  const [first, second] = flippedCards;
-  if(first.dataset.number === second.dataset.number) {
-    score++;
-    scoreEl.textContent = score;
-    flippedCards = [];
-    if(score === cardsArray.length/2) {
-      clearInterval(timer);
-      alert(`You win! Time: ${time}s`);
-    }
-  } else {
-    setTimeout(() => {
-      first.classList.remove('flipped'); first.textContent = '';
-      second.classList.remove('flipped'); second.textContent = '';
-      flippedCards = [];
-    }, 800);
+  if (flippedCards.length === 2) {
+    checkMatch();
   }
 }
 
-// Start game button
-startBtn.addEventListener('click', () => {
+// Core evaluation engine
+function checkMatch() {
+  isProcessing = true;
+  const [first, second] = flippedCards;
+
+  if (first.dataset.number === second.dataset.number) {
+    // Handshake complete: Trigger matched aesthetics
+    first.classList.add('matched');
+    second.classList.add('matched');
+    score++;
+    scoreEl.textContent = score;
+    flippedCards = [];
+    isProcessing = false;
+
+    // Victory checkpoint
+    if (score === cardsArray.length / 2) {
+      clearInterval(timer);
+      setTimeout(() => {
+        winMessage.textContent = `You cleared a ${gridSelect.value}x${gridSelect.value} grid in ${time} seconds!`;
+        winModal.style.display = 'flex';
+      }, 500);
+    }
+  } else {
+    // Mismatch penalty cooldown reset
+    setTimeout(() => {
+      first.classList.remove('flipped');
+      second.classList.remove('flipped');
+      flippedCards = [];
+      isProcessing = false;
+    }, 1000);
+  }
+}
+
+function initGame() {
   score = 0;
   scoreEl.textContent = score;
-  clearInterval(timer);
-  const min = parseInt(minInput.value);
-  const max = parseInt(maxInput.value);
-  const gridSize = parseInt(gridSelect.value);
-  createGrid(min, max, gridSize);
+  winModal.style.display = 'none';
+  createGrid();
   startTimer();
-});
+}
 
-// Initialize default game
-createGrid(parseInt(minInput.value), parseInt(maxInput.value), parseInt(gridSelect.value));
-startTimer();
+// System Triggers
+startBtn.addEventListener('click', initGame);
+modalCloseBtn.addEventListener('click', initGame);
+
+// Fire application instantiation
+initGame();
 </script>
 
 </body>
